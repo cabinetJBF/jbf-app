@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { asc, desc, eq, isNull, not, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { clients, dossiers, users } from "@/lib/db/schema";
+import { clients, dossiers, encaissements, users } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/dal";
 import { ClientForm } from "@/components/client-form";
 import { formatDateTimeParis } from "@/lib/format";
 import {
   STATUT_LABELS,
+  formatMontant,
   formatTypeProcedure,
   type StatutDossier,
   type TypeProcedure,
@@ -73,6 +74,25 @@ export default async function ClientDetailPage({
       sql`CASE WHEN ${dossiers.statut} = 'en_cours' THEN 0 ELSE 1 END`,
       desc(dossiers.createdAt),
     );
+
+  const [financialTotals] = await db
+    .select({
+      totalConvenu: sql<string>`COALESCE(SUM(${dossiers.montantConvenu}), 0)`,
+    })
+    .from(dossiers)
+    .where(eq(dossiers.clientId, row.id));
+
+  const [encaisseTotal] = await db
+    .select({
+      total: sql<string>`COALESCE(SUM(${encaissements.montant}), 0)`,
+    })
+    .from(encaissements)
+    .innerJoin(dossiers, eq(encaissements.dossierId, dossiers.id))
+    .where(eq(dossiers.clientId, row.id));
+
+  const totalConvenu = Number(financialTotals?.totalConvenu ?? 0);
+  const totalEncaisse = Number(encaisseTotal?.total ?? 0);
+  const resteDu = totalConvenu - totalEncaisse;
 
   const isArchived = row.archiveLe !== null;
 
@@ -184,14 +204,30 @@ export default async function ClientDetailPage({
         )}
       </section>
 
-      <section className="mt-6 rounded-lg border border-dashed border-slate-300 bg-white p-6">
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-6">
         <h2 className="text-base font-medium text-slate-900">
           Récap financier global
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Total convenu / total encaissé / reste dû tous dossiers confondus.
-          Disponible en Phase 3.
+        <p className="mt-1 text-xs text-slate-500">
+          Cumul sur tous les dossiers de ce client (actifs et archivés).
         </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <FinancialCard
+            label="Total convenu"
+            value={formatMontant(totalConvenu)}
+            tone="neutral"
+          />
+          <FinancialCard
+            label="Total encaissé"
+            value={formatMontant(totalEncaisse)}
+            tone="positive"
+          />
+          <FinancialCard
+            label="Reste dû"
+            value={formatMontant(resteDu)}
+            tone={resteDu > 0 ? "warning" : "positive"}
+          />
+        </div>
       </section>
 
       <section className="mt-6 rounded-lg border border-slate-200 bg-white p-6">
@@ -242,5 +278,32 @@ function StatutBadge({ statut }: { statut: StatutDossier }) {
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${styles}`}>
       {STATUT_LABELS[statut]}
     </span>
+  );
+}
+
+function FinancialCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "neutral" | "positive" | "warning";
+}) {
+  const color =
+    tone === "positive"
+      ? "text-emerald-700"
+      : tone === "warning"
+        ? "text-amber-700"
+        : "text-slate-900";
+  return (
+    <div className="rounded-lg bg-slate-50 p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className={`mt-1 font-mono text-lg font-semibold ${color}`}>
+        {value}
+      </p>
+    </div>
   );
 }
