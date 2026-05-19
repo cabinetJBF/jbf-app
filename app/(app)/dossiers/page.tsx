@@ -81,6 +81,7 @@ export default async function DossiersPage({
     .select({
       id: dossiers.id,
       numeroDossier: dossiers.numeroDossier,
+      intitule: dossiers.intitule,
       typeProcedure: dossiers.typeProcedure,
       typeProcedureAutre: dossiers.typeProcedureAutre,
       juridiction: dossiers.juridiction,
@@ -227,7 +228,7 @@ export default async function DossiersPage({
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
-                <Th>N°</Th>
+                <Th>Dossier</Th>
                 <Th>Client</Th>
                 <Th>Type</Th>
                 <Th>Juridiction</Th>
@@ -239,12 +240,21 @@ export default async function DossiersPage({
             <tbody className="divide-y divide-slate-100">
               {rows.map((d) => (
                 <tr key={d.id} className="hover:bg-slate-50">
-                  <td className="whitespace-nowrap px-4 py-2.5 text-sm">
+                  <td className="px-4 py-2.5 text-sm">
                     <Link
                       href={`/dossiers/${d.id}`}
-                      className="font-mono font-medium text-slate-900 hover:underline"
+                      className="block hover:underline"
                     >
-                      {d.numeroDossier}
+                      <span className="font-medium text-slate-900">
+                        {d.intitule ?? (
+                          <span className="italic text-slate-400">
+                            (sans intitulé)
+                          </span>
+                        )}
+                      </span>
+                      <span className="ml-2 font-mono text-xs text-slate-500">
+                        {d.numeroDossier}
+                      </span>
                     </Link>
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-sm">

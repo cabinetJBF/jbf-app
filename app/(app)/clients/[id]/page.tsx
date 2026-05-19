@@ -55,6 +55,7 @@ export default async function ClientDetailPage({
     .select({
       id: dossiers.id,
       numeroDossier: dossiers.numeroDossier,
+      intitule: dossiers.intitule,
       typeProcedure: dossiers.typeProcedure,
       typeProcedureAutre: dossiers.typeProcedureAutre,
       juridiction: dossiers.juridiction,
@@ -145,9 +146,18 @@ export default async function ClientDetailPage({
                 <div>
                   <Link
                     href={`/dossiers/${d.id}`}
-                    className="font-mono font-medium text-slate-900 hover:underline"
+                    className="block hover:underline"
                   >
-                    {d.numeroDossier}
+                    <span className="font-medium text-slate-900">
+                      {d.intitule ?? (
+                        <span className="italic text-slate-400">
+                          (sans intitulé)
+                        </span>
+                      )}
+                    </span>
+                    <span className="ml-2 font-mono text-xs text-slate-500">
+                      {d.numeroDossier}
+                    </span>
                   </Link>
                   <p className="text-xs text-slate-500">
                     {formatTypeProcedure(

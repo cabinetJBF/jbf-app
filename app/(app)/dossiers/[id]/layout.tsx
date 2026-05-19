@@ -33,6 +33,7 @@ export default async function DossierLayout({
     .select({
       id: dossiers.id,
       numeroDossier: dossiers.numeroDossier,
+      intitule: dossiers.intitule,
       typeProcedure: dossiers.typeProcedure,
       typeProcedureAutre: dossiers.typeProcedureAutre,
       juridiction: dossiers.juridiction,
@@ -59,15 +60,24 @@ export default async function DossierLayout({
           Dossiers
         </Link>
         <span className="mx-1">/</span>
-        <span className="font-mono">{row.numeroDossier}</span>
+        <span>
+          {row.intitule ?? (
+            <span className="italic">(sans intitulé)</span>
+          )}
+        </span>
       </nav>
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-mono text-2xl font-semibold text-slate-900">
-            {row.numeroDossier}
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {row.intitule ?? (
+              <span className="italic text-slate-400">(sans intitulé)</span>
+            )}
           </h1>
-          <p className="mt-1 text-sm text-slate-700">
+          <p className="mt-1 text-xs font-mono text-slate-500">
+            {row.numeroDossier}
+          </p>
+          <p className="mt-2 text-sm text-slate-700">
             <Link
               href={`/clients/${row.clientId}`}
               className="font-medium hover:underline"

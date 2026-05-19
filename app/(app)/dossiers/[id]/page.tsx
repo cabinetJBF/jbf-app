@@ -29,6 +29,7 @@ export default async function DossierApercuPage({
     .select({
       id: dossiers.id,
       numeroDossier: dossiers.numeroDossier,
+      intitule: dossiers.intitule,
       clientId: dossiers.clientId,
       typeProcedure: dossiers.typeProcedure,
       typeProcedureAutre: dossiers.typeProcedureAutre,
@@ -75,6 +76,7 @@ export default async function DossierApercuPage({
   const defaults = {
     id: row.id,
     numeroDossier: row.numeroDossier,
+    intitule: row.intitule,
     clientId: row.clientId,
     typeProcedure: row.typeProcedure,
     typeProcedureAutre: row.typeProcedureAutre,

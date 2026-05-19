@@ -1,0 +1,1 @@
+ALTER TABLE "dossiers" ADD COLUMN "intitule" text;

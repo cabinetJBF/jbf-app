@@ -11,6 +11,11 @@ export const dossierInputSchema = z
       .trim()
       .min(1, "Le numéro de dossier est requis")
       .max(40, "Le numéro est trop long"),
+    intitule: z
+      .string()
+      .trim()
+      .min(1, "L'intitulé du dossier est requis")
+      .max(200, "L'intitulé est trop long"),
     clientId: z.string().uuid("Client invalide"),
     typeProcedure: z.enum(TYPE_PROCEDURE_VALUES, {
       message: "Type de procédure invalide",

@@ -14,6 +14,7 @@ import {
 
 type DossierField =
   | "numeroDossier"
+  | "intitule"
   | "clientId"
   | "typeProcedure"
   | "typeProcedureAutre"
@@ -31,6 +32,7 @@ export type DossierFormState = {
 function readFields(formData: FormData) {
   return {
     numeroDossier: ((formData.get("numeroDossier") ?? "") as string).trim(),
+    intitule: ((formData.get("intitule") ?? "") as string).trim(),
     clientId: (formData.get("clientId") ?? "") as string,
     typeProcedure: (formData.get("typeProcedure") ?? "") as string,
     typeProcedureAutre: ((formData.get("typeProcedureAutre") ?? "") as string).trim(),
@@ -70,6 +72,7 @@ export async function createDossier(
       .insert(dossiers)
       .values({
         numeroDossier: data.numeroDossier,
+        intitule: data.intitule,
         clientId: data.clientId,
         typeProcedure: data.typeProcedure,
         typeProcedureAutre:
@@ -124,6 +127,7 @@ export async function updateDossier(
       .update(dossiers)
       .set({
         numeroDossier: data.numeroDossier,
+        intitule: data.intitule,
         clientId: data.clientId,
         typeProcedure: data.typeProcedure,
         typeProcedureAutre:

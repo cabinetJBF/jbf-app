@@ -19,6 +19,7 @@ type UserOption = { id: string; label: string };
 type Defaults = {
   id?: string;
   numeroDossier?: string;
+  intitule?: string | null;
   clientId?: string;
   typeProcedure?: string;
   typeProcedureAutre?: string | null;
@@ -58,6 +59,17 @@ export function DossierForm({
   return (
     <form action={formAction} className="space-y-5">
       {defaults?.id ? <input type="hidden" name="id" value={defaults.id} /> : null}
+
+      <div>
+        <Field
+          label="Intitulé du dossier"
+          name="intitule"
+          required
+          defaultValue={defaults?.intitule ?? ""}
+          error={state?.fieldErrors?.intitule}
+          hint="Ex : Affaire DUPONT / vol aggravé, BENSADOUN c/ X, contestation amende…"
+        />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field

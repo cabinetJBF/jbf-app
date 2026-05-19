@@ -99,6 +99,7 @@ export const dossiers = pgTable(
   {
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     numeroDossier: text("numero_dossier").notNull(),
+    intitule: text("intitule"),
     clientId: uuid("client_id")
       .notNull()
       .references(() => clients.id, { onDelete: "restrict" }),
