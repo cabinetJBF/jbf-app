@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type {
   DossierFormState,
   createDossier,
@@ -21,6 +21,7 @@ type Defaults = {
   numeroDossier?: string;
   clientId?: string;
   typeProcedure?: string;
+  typeProcedureAutre?: string | null;
   juridiction?: string;
   associeResponsableId?: string;
   statut?: string;
@@ -50,6 +51,10 @@ export function DossierForm({
     FormData
   >(action, undefined);
 
+  const [typeProcedure, setTypeProcedure] = useState<string>(
+    defaults?.typeProcedure ?? "",
+  );
+
   return (
     <form action={formAction} className="space-y-5">
       {defaults?.id ? <input type="hidden" name="id" value={defaults.id} /> : null}
@@ -78,18 +83,53 @@ export function DossierForm({
           error={state?.fieldErrors?.clientId}
         />
 
-        <Select
-          label="Type de procédure"
-          name="typeProcedure"
-          required
-          defaultValue={defaults?.typeProcedure ?? ""}
-          options={TYPE_PROCEDURE_VALUES.map((v) => ({
-            value: v,
-            label: TYPE_PROCEDURE_LABELS[v],
-          }))}
-          placeholder="— Choisir un type —"
-          error={state?.fieldErrors?.typeProcedure}
-        />
+        <div>
+          <label
+            htmlFor="typeProcedure"
+            className="block text-sm font-medium text-slate-700"
+          >
+            Type de procédure
+          </label>
+          <select
+            id="typeProcedure"
+            name="typeProcedure"
+            required
+            value={typeProcedure}
+            onChange={(e) => setTypeProcedure(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+          >
+            <option value="" disabled>
+              — Choisir un type —
+            </option>
+            {TYPE_PROCEDURE_VALUES.map((v) => (
+              <option key={v} value={v}>
+                {TYPE_PROCEDURE_LABELS[v]}
+              </option>
+            ))}
+          </select>
+          {state?.fieldErrors?.typeProcedure ? (
+            <p className="mt-1 text-xs text-red-600">
+              {state.fieldErrors.typeProcedure}
+            </p>
+          ) : null}
+        </div>
+
+        {typeProcedure === "autre" ? (
+          <Field
+            label="Précisez le type"
+            name="typeProcedureAutre"
+            required
+            defaultValue={defaults?.typeProcedureAutre ?? ""}
+            error={state?.fieldErrors?.typeProcedureAutre}
+            hint="Sera affiché à la place de « Autre » dans les listes."
+          />
+        ) : (
+          <input
+            type="hidden"
+            name="typeProcedureAutre"
+            value={defaults?.typeProcedureAutre ?? ""}
+          />
+        )}
 
         <Field
           label="Juridiction"

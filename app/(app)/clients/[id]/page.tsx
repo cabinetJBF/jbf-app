@@ -9,7 +9,7 @@ import { ClientForm } from "@/components/client-form";
 import { formatDateTimeParis } from "@/lib/format";
 import {
   STATUT_LABELS,
-  TYPE_PROCEDURE_LABELS,
+  formatTypeProcedure,
   type StatutDossier,
   type TypeProcedure,
 } from "@/lib/dossier-labels";
@@ -56,6 +56,7 @@ export default async function ClientDetailPage({
       id: dossiers.id,
       numeroDossier: dossiers.numeroDossier,
       typeProcedure: dossiers.typeProcedure,
+      typeProcedureAutre: dossiers.typeProcedureAutre,
       juridiction: dossiers.juridiction,
       statut: dossiers.statut,
       archiveLe: dossiers.archiveLe,
@@ -149,11 +150,10 @@ export default async function ClientDetailPage({
                     {d.numeroDossier}
                   </Link>
                   <p className="text-xs text-slate-500">
-                    {
-                      TYPE_PROCEDURE_LABELS[
-                        d.typeProcedure as TypeProcedure
-                      ]
-                    }{" "}
+                    {formatTypeProcedure(
+                      d.typeProcedure as TypeProcedure,
+                      d.typeProcedureAutre,
+                    )}{" "}
                     · {d.juridiction}
                     {d.associePrenom
                       ? ` · ${d.associePrenom} ${d.associeNom}`

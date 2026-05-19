@@ -19,6 +19,7 @@ import {
   TYPE_PROCEDURE_LABELS,
   TYPE_PROCEDURE_VALUES,
   formatMontant,
+  formatTypeProcedure,
   type StatutDossier,
   type TypeProcedure,
 } from "@/lib/dossier-labels";
@@ -81,6 +82,7 @@ export default async function DossiersPage({
       id: dossiers.id,
       numeroDossier: dossiers.numeroDossier,
       typeProcedure: dossiers.typeProcedure,
+      typeProcedureAutre: dossiers.typeProcedureAutre,
       juridiction: dossiers.juridiction,
       statut: dossiers.statut,
       montantConvenu: dossiers.montantConvenu,
@@ -254,7 +256,10 @@ export default async function DossiersPage({
                     </Link>
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-600">
-                    {TYPE_PROCEDURE_LABELS[d.typeProcedure as TypeProcedure]}
+                    {formatTypeProcedure(
+                      d.typeProcedure as TypeProcedure,
+                      d.typeProcedureAutre,
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-600">
                     {d.juridiction}

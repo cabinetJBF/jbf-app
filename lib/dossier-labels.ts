@@ -30,6 +30,16 @@ export const STATUT_LABELS = {
 export const STATUT_VALUES = ["en_cours", "cloture"] as const;
 export type StatutDossier = (typeof STATUT_VALUES)[number];
 
+export function formatTypeProcedure(
+  type: TypeProcedure,
+  autre: string | null | undefined,
+): string {
+  if (type === "autre" && autre && autre.trim()) {
+    return autre.trim();
+  }
+  return TYPE_PROCEDURE_LABELS[type];
+}
+
 const CURRENCY_FR = new Intl.NumberFormat("fr-FR", {
   style: "currency",
   currency: "EUR",

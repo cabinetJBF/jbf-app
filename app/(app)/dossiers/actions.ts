@@ -12,11 +12,20 @@ import {
   normalizeMontant,
 } from "@/lib/validations/dossier";
 
+type DossierField =
+  | "numeroDossier"
+  | "clientId"
+  | "typeProcedure"
+  | "typeProcedureAutre"
+  | "juridiction"
+  | "associeResponsableId"
+  | "statut"
+  | "description"
+  | "montantConvenu";
+
 export type DossierFormState = {
   error?: string;
-  fieldErrors?: Partial<
-    Record<keyof typeof dossierInputSchema.shape, string>
-  >;
+  fieldErrors?: Partial<Record<DossierField, string>>;
 };
 
 function readFields(formData: FormData) {
@@ -24,6 +33,7 @@ function readFields(formData: FormData) {
     numeroDossier: ((formData.get("numeroDossier") ?? "") as string).trim(),
     clientId: (formData.get("clientId") ?? "") as string,
     typeProcedure: (formData.get("typeProcedure") ?? "") as string,
+    typeProcedureAutre: ((formData.get("typeProcedureAutre") ?? "") as string).trim(),
     juridiction: ((formData.get("juridiction") ?? "") as string).trim(),
     associeResponsableId: (formData.get("associeResponsableId") ?? "") as string,
     statut: (formData.get("statut") ?? "en_cours") as string,
@@ -62,6 +72,10 @@ export async function createDossier(
         numeroDossier: data.numeroDossier,
         clientId: data.clientId,
         typeProcedure: data.typeProcedure,
+        typeProcedureAutre:
+          data.typeProcedure === "autre"
+            ? (data.typeProcedureAutre?.trim() || null)
+            : null,
         juridiction: data.juridiction,
         associeResponsableId: data.associeResponsableId,
         statut: data.statut,
@@ -86,25 +100,24 @@ export async function createDossier(
   }
 }
 
-const updateSchema = dossierInputSchema.extend({
-  id: z.string().uuid(),
-});
-
 export async function updateDossier(
   _prev: DossierFormState | undefined,
   formData: FormData,
 ): Promise<DossierFormState> {
   await requireUser();
 
-  const parsed = updateSchema.safeParse({
-    id: formData.get("id"),
-    ...readFields(formData),
-  });
+  const rawId = formData.get("id");
+  const idCheck = z.string().uuid().safeParse(rawId);
+  if (!idCheck.success) {
+    return { error: "Identifiant invalide" };
+  }
+
+  const parsed = dossierInputSchema.safeParse(readFields(formData));
   if (!parsed.success) {
     return { fieldErrors: formatFieldErrors(parsed.error) };
   }
-
-  const { id, ...data } = parsed.data;
+  const data = parsed.data;
+  const id = idCheck.data;
 
   try {
     await db
@@ -113,6 +126,10 @@ export async function updateDossier(
         numeroDossier: data.numeroDossier,
         clientId: data.clientId,
         typeProcedure: data.typeProcedure,
+        typeProcedureAutre:
+          data.typeProcedure === "autre"
+            ? (data.typeProcedureAutre?.trim() || null)
+            : null,
         juridiction: data.juridiction,
         associeResponsableId: data.associeResponsableId,
         statut: data.statut,

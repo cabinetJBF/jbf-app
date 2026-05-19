@@ -103,6 +103,7 @@ export const dossiers = pgTable(
       .notNull()
       .references(() => clients.id, { onDelete: "restrict" }),
     typeProcedure: typeProcedureEnum("type_procedure").notNull(),
+    typeProcedureAutre: text("type_procedure_autre"),
     juridiction: text("juridiction").notNull(),
     associeResponsableId: uuid("associe_responsable_id")
       .notNull()

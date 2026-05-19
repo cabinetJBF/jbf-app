@@ -1,0 +1,1 @@
+ALTER TABLE "dossiers" ADD COLUMN "type_procedure_autre" text;

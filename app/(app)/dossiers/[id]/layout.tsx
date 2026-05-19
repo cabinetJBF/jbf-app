@@ -7,7 +7,7 @@ import { clients, dossiers, users } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/dal";
 import {
   STATUT_LABELS,
-  TYPE_PROCEDURE_LABELS,
+  formatTypeProcedure,
   type StatutDossier,
   type TypeProcedure,
 } from "@/lib/dossier-labels";
@@ -34,6 +34,7 @@ export default async function DossierLayout({
       id: dossiers.id,
       numeroDossier: dossiers.numeroDossier,
       typeProcedure: dossiers.typeProcedure,
+      typeProcedureAutre: dossiers.typeProcedureAutre,
       juridiction: dossiers.juridiction,
       statut: dossiers.statut,
       archiveLe: dossiers.archiveLe,
@@ -74,8 +75,11 @@ export default async function DossierLayout({
               {row.clientNom.toUpperCase()} {row.clientPrenom}
             </Link>
             {" — "}
-            {TYPE_PROCEDURE_LABELS[row.typeProcedure as TypeProcedure]} ·{" "}
-            {row.juridiction}
+            {formatTypeProcedure(
+              row.typeProcedure as TypeProcedure,
+              row.typeProcedureAutre,
+            )}{" "}
+            · {row.juridiction}
             {row.associePrenom ? (
               <>
                 {" · "}
