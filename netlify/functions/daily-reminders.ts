@@ -82,6 +82,7 @@ type DryRunResult = {
 
 async function runDailyReminders(): Promise<DryRunResult> {
   const todayIso = getTodayParisIsoDate();
+  const notificationOverride = process.env.NOTIFICATION_EMAIL?.trim() || null;
   const result: DryRunResult = {
     ok: true,
     todayParis: todayIso,
@@ -157,8 +158,9 @@ async function runDailyReminders(): Promise<DryRunResult> {
         dateHeureUtc: utc,
       });
 
+      const audienceRecipient = notificationOverride ?? row.associeEmail;
       const sendResult = await sendEmail({
-        to: row.associeEmail,
+        to: audienceRecipient,
         subject,
         text,
         html,
@@ -169,7 +171,7 @@ async function runDailyReminders(): Promise<DryRunResult> {
           window: w.window,
           dossierIntitule: row.dossierIntitule,
           dossierNumero: row.dossierNumero,
-          to: row.associeEmail,
+          to: audienceRecipient,
           status: "send_failed",
           sendError: sendResult.error,
         });
@@ -180,25 +182,30 @@ async function runDailyReminders(): Promise<DryRunResult> {
       await db.insert(emailLog).values({
         emailType: w.type,
         audienceId: row.audienceId,
-        destinataire: row.associeEmail,
+        destinataire: audienceRecipient,
       });
 
       result.audiences.push({
         window: w.window,
         dossierIntitule: row.dossierIntitule,
         dossierNumero: row.dossierNumero,
-        to: row.associeEmail,
+        to: audienceRecipient,
         status: "sent",
       });
     }
   }
 
   // --- Rappels ---
-  const activeAssociates = await db
-    .select({ email: users.email })
-    .from(users)
-    .where(eq(users.actif, true));
-  const cabinetEmails = activeAssociates.map((u) => u.email);
+  let cabinetEmails: string[];
+  if (notificationOverride) {
+    cabinetEmails = [notificationOverride];
+  } else {
+    const activeAssociates = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.actif, true));
+    cabinetEmails = activeAssociates.map((u) => u.email);
+  }
 
   for (const w of RAPPEL_WINDOWS) {
     const targetIso = addParisDays(todayIso, w.delta);
