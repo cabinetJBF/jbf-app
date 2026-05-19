@@ -10,18 +10,32 @@ async function main() {
   }
 
   const sql = neon(process.env.DATABASE_URL);
-  const rows = await sql<{ version: string; db: string; now: string }[]>`
-    SELECT version() AS version, current_database() AS db, now() AS now
+
+  const info = (
+    await sql<{ db: string; now: string }[]>`
+      SELECT current_database() AS db, now() AS now
+    `
+  )[0];
+
+  const tables = await sql<{ table_name: string }[]>`
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_type = 'BASE TABLE'
+    ORDER BY table_name
   `;
-  const info = rows[0];
 
   console.log("✓ Connexion réussie à Neon");
   console.log("  Base       :", info.db);
   console.log("  Heure base :", info.now);
-  console.log("  Version    :", info.version.split(",")[0]);
+  console.log("");
+  console.log(`Tables présentes (${tables.length}) :`);
+  for (const t of tables) {
+    console.log("  •", t.table_name);
+  }
 }
 
 main().catch((err) => {
-  console.error("✗ Erreur de connexion :", err.message);
+  console.error("✗ Erreur :", err.message);
   process.exit(1);
 });
