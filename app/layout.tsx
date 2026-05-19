@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -16,6 +16,16 @@ export const metadata: Metadata = {
   title: "Cabinet JBF",
   description: "Outil interne de gestion — Cabinet JBF",
   robots: { index: false, follow: false },
+  applicationName: "Cabinet JBF",
+  appleWebApp: {
+    capable: true,
+    title: "Cabinet JBF",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
