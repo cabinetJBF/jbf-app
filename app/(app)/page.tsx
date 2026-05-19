@@ -7,6 +7,7 @@ import {
   dossiers,
   encaissements,
   rappels,
+  users,
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/dal";
 import {
@@ -39,8 +40,8 @@ export default async function DashboardPage() {
   const startUtc = parisInputToUtc(`${todayIso}T00:00:00`);
   const endUtc = parisInputToUtc(`${in31DaysIso}T00:00:00`);
 
-  // --- Mes audiences à venir (7 prochains jours, dossiers actifs) ---
-  const myAudiencesRows = await db
+  // --- Audiences à venir (30 prochains jours, tous associés, dossiers actifs) ---
+  const audiencesRows = await db
     .select({
       id: audiences.id,
       dateHeure: audiences.dateHeure,
@@ -48,16 +49,18 @@ export default async function DashboardPage() {
       dossierIntitule: dossiers.intitule,
       clientNom: clients.nom,
       clientPrenom: clients.prenom,
+      associePrenom: users.prenom,
+      associeNom: users.nom,
     })
     .from(audiences)
     .innerJoin(dossiers, eq(audiences.dossierId, dossiers.id))
     .innerJoin(clients, eq(dossiers.clientId, clients.id))
+    .leftJoin(users, eq(dossiers.associeResponsableId, users.id))
     .where(
       and(
         gte(audiences.dateHeure, startUtc),
         lt(audiences.dateHeure, endUtc),
         isNull(dossiers.archiveLe),
-        eq(dossiers.associeResponsableId, user.id),
       ),
     )
     .orderBy(asc(audiences.dateHeure));
@@ -137,16 +140,16 @@ export default async function DashboardPage() {
         {/* Card 1 : Audiences à venir */}
         <Card>
           <CardHeader
-            title="Mes audiences à venir"
-            hint="30 prochains jours"
-            count={myAudiencesRows.length}
+            title="Audiences à venir"
+            hint="30 prochains jours, tous associés"
+            count={audiencesRows.length}
             href={null}
           />
-          {myAudiencesRows.length === 0 ? (
+          {audiencesRows.length === 0 ? (
             <CardEmpty>Aucune audience prévue dans les 30 jours.</CardEmpty>
           ) : (
             <ul className="mt-3 divide-y divide-slate-100">
-              {myAudiencesRows.slice(0, 5).map((a) => {
+              {audiencesRows.slice(0, 5).map((a) => {
                 const utc =
                   typeof a.dateHeure === "string"
                     ? a.dateHeure
@@ -170,11 +173,16 @@ export default async function DashboardPage() {
                           — {a.clientNom.toUpperCase()} {a.clientPrenom}
                         </span>
                       </p>
+                      {a.associePrenom ? (
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          Suivi par {a.associePrenom} {a.associeNom}
+                        </p>
+                      ) : null}
                     </Link>
                   </li>
                 );
               })}
-              {myAudiencesRows.length > 5 ? (
+              {audiencesRows.length > 5 ? (
                 <li className="pt-2">
                   <Link
                     href="/agenda"
