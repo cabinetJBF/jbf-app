@@ -1,7 +1,3 @@
-import { config } from "dotenv";
-config({ path: ".env" });
-config({ path: ".env.local", override: true });
-
 import * as readline from "node:readline/promises";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";

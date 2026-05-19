@@ -7,12 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:test": "tsx scripts/test-db.ts",
+    "db:test": "tsx --env-file=.env.local scripts/test-db.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "user:create": "tsx scripts/create-user.ts"
+    "user:create": "tsx --env-file=.env.local scripts/create-user.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
