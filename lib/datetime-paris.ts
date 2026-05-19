@@ -16,3 +16,13 @@ export function formatAudienceDateParis(date: Date | string): string {
     locale: fr,
   });
 }
+
+export function getTodayParisIsoDate(): string {
+  return formatInTimeZone(new Date(), TZ, "yyyy-MM-dd");
+}
+
+export function formatEcheanceLong(isoDate: string): string {
+  const [yyyy, mm, dd] = isoDate.split("-").map(Number);
+  const date = new Date(Date.UTC(yyyy, mm - 1, dd));
+  return formatInTimeZone(date, TZ, "EEEE d MMMM yyyy", { locale: fr });
+}
