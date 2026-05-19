@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, eq, gt, isNotNull, isNull, sql, desc } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { clients, dossiers, encaissements, users } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/dal";
@@ -7,24 +7,32 @@ import { formatMontant } from "@/lib/dossier-labels";
 
 export const dynamic = "force-dynamic";
 
+type Row = {
+  dossierId: string;
+  numeroDossier: string;
+  intitule: string | null;
+  montantConvenu: string;
+  totalEncaisse: number;
+  clientId: string;
+  clientNom: string;
+  clientPrenom: string;
+  associePrenom: string | null;
+  associeNom: string | null;
+  resteDu: number;
+};
+
 export default async function HonorairesPage() {
   await requireUser();
 
-  const restePerDossier = db
+  const dossierRows = await db
     .select({
       dossierId: dossiers.id,
       numeroDossier: dossiers.numeroDossier,
       intitule: dossiers.intitule,
       montantConvenu: dossiers.montantConvenu,
-      totalEncaisse: sql<string>`COALESCE((
-        SELECT SUM(${encaissements.montant})
-        FROM ${encaissements}
-        WHERE ${encaissements.dossierId} = ${dossiers.id}
-      ), 0)`.as("totalEncaisse"),
       clientId: clients.id,
       clientNom: clients.nom,
       clientPrenom: clients.prenom,
-      associeId: users.id,
       associePrenom: users.prenom,
       associeNom: users.nom,
     })
@@ -37,37 +45,43 @@ export default async function HonorairesPage() {
         isNotNull(dossiers.montantConvenu),
         gt(dossiers.montantConvenu, sql`0`),
       ),
-    )
-    .as("rd");
-
-  const rows = await db
-    .select({
-      dossierId: restePerDossier.dossierId,
-      numeroDossier: restePerDossier.numeroDossier,
-      intitule: restePerDossier.intitule,
-      montantConvenu: restePerDossier.montantConvenu,
-      totalEncaisse: restePerDossier.totalEncaisse,
-      clientId: restePerDossier.clientId,
-      clientNom: restePerDossier.clientNom,
-      clientPrenom: restePerDossier.clientPrenom,
-      associePrenom: restePerDossier.associePrenom,
-      associeNom: restePerDossier.associeNom,
-      resteDu: sql<string>`${restePerDossier.montantConvenu} - ${restePerDossier.totalEncaisse}`,
-    })
-    .from(restePerDossier)
-    .where(
-      sql`${restePerDossier.montantConvenu} - ${restePerDossier.totalEncaisse} > 0`,
-    )
-    .orderBy(
-      desc(
-        sql`${restePerDossier.montantConvenu} - ${restePerDossier.totalEncaisse}`,
-      ),
     );
 
-  const totalRestant = rows.reduce(
-    (acc, r) => acc + Number(r.resteDu),
-    0,
+  const sumRows = await db
+    .select({
+      dossierId: encaissements.dossierId,
+      total: sql<string>`SUM(${encaissements.montant})`,
+    })
+    .from(encaissements)
+    .groupBy(encaissements.dossierId);
+
+  const sumByDossier = new Map<string, number>(
+    sumRows.map((r) => [r.dossierId, Number(r.total)]),
   );
+
+  const rows: Row[] = dossierRows
+    .map((d) => {
+      const montantConvenuNum = Number(d.montantConvenu);
+      const totalEncaisse = sumByDossier.get(d.dossierId) ?? 0;
+      const resteDu = montantConvenuNum - totalEncaisse;
+      return {
+        dossierId: d.dossierId,
+        numeroDossier: d.numeroDossier,
+        intitule: d.intitule,
+        montantConvenu: d.montantConvenu as string,
+        totalEncaisse,
+        clientId: d.clientId,
+        clientNom: d.clientNom,
+        clientPrenom: d.clientPrenom,
+        associePrenom: d.associePrenom,
+        associeNom: d.associeNom,
+        resteDu,
+      };
+    })
+    .filter((r) => r.resteDu > 0)
+    .sort((a, b) => b.resteDu - a.resteDu);
+
+  const totalRestant = rows.reduce((acc, r) => acc + r.resteDu, 0);
 
   return (
     <div>
@@ -135,7 +149,9 @@ export default async function HonorairesPage() {
                     </Link>
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-600">
-                    {r.associePrenom ? `${r.associePrenom} ${r.associeNom}` : "—"}
+                    {r.associePrenom
+                      ? `${r.associePrenom} ${r.associeNom}`
+                      : "—"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm text-slate-700">
                     {formatMontant(r.montantConvenu)}
