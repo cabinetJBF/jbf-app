@@ -11,6 +11,10 @@ const SESSION_COOKIE_NAMES = [
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  if (pathname.startsWith("/.netlify/")) {
+    return NextResponse.next();
+  }
+
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return NextResponse.next();
   }
@@ -32,6 +36,6 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|\\.netlify|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)",
   ],
 };
