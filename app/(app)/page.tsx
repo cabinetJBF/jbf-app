@@ -65,7 +65,7 @@ export default async function DashboardPage() {
     )
     .orderBy(asc(audiences.dateHeure));
 
-  // --- Rappels du jour et à venir (7 jours, tous associés, non terminés, dossiers actifs) ---
+  // --- Rappels du jour et à venir (30 jours, tous associés, non terminés, dossiers actifs) ---
   const rappelsRows = await db
     .select({
       id: rappels.id,
@@ -73,9 +73,12 @@ export default async function DashboardPage() {
       dateEcheance: rappels.dateEcheance,
       dossierId: dossiers.id,
       dossierIntitule: dossiers.intitule,
+      clientNom: clients.nom,
+      clientPrenom: clients.prenom,
     })
     .from(rappels)
     .innerJoin(dossiers, eq(rappels.dossierId, dossiers.id))
+    .innerJoin(clients, eq(dossiers.clientId, clients.id))
     .where(
       and(
         gte(rappels.dateEcheance, todayIso),
@@ -234,6 +237,9 @@ export default async function DashboardPage() {
                             </span>
                           )}
                         </span>
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-400">
+                        Client : {r.clientNom.toUpperCase()} {r.clientPrenom}
                       </p>
                     </Link>
                   </li>
