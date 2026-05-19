@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { verifyPassword } from "@/lib/auth/password";
+import { extractClientIp, logAccess } from "@/lib/auth/log";
 
 const credentialsSchema = z.object({
   email: z.string().email().toLowerCase(),
@@ -29,11 +30,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Mot de passe", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const parsed = credentialsSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
+        const ip = extractClientIp(request.headers);
+        const userAgent = request.headers.get("user-agent");
 
         const rows = await db
           .select()
@@ -42,10 +45,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .limit(1);
 
         const user = rows[0];
-        if (!user || !user.actif) return null;
+        if (!user || !user.actif) {
+          await logAccess({
+            userId: user?.id ?? null,
+            action: "login_failed",
+            ip,
+            userAgent,
+            details: {
+              email,
+              reason: !user ? "user_not_found" : "inactive",
+            },
+          });
+          return null;
+        }
 
         const valid = await verifyPassword(password, user.passwordHash);
-        if (!valid) return null;
+        if (!valid) {
+          await logAccess({
+            userId: user.id,
+            action: "login_failed",
+            ip,
+            userAgent,
+            details: { email, reason: "wrong_password" },
+          });
+          return null;
+        }
+
+        await logAccess({
+          userId: user.id,
+          action: "login",
+          ip,
+          userAgent,
+        });
 
         return {
           id: user.id,

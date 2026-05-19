@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/dossiers", label: "Dossiers" },
   { href: "/agenda", label: "Agenda" },
   { href: "/honoraires", label: "Honoraires" },
+  { href: "/parametres", label: "Paramètres" },
 ];
 
 export function NavBar({ user }: { user: AuthenticatedUser }) {
