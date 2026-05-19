@@ -33,11 +33,11 @@ export default async function DashboardPage() {
   const user = await requireUser();
 
   const todayIso = getTodayParisIsoDate();
-  const in7DaysIso = addDaysIso(todayIso, 7);
-  const in8DaysIso = addDaysIso(todayIso, 8);
+  const in30DaysIso = addDaysIso(todayIso, 30);
+  const in31DaysIso = addDaysIso(todayIso, 31);
 
   const startUtc = parisInputToUtc(`${todayIso}T00:00:00`);
-  const endUtc = parisInputToUtc(`${in8DaysIso}T00:00:00`);
+  const endUtc = parisInputToUtc(`${in31DaysIso}T00:00:00`);
 
   // --- Mes audiences à venir (7 prochains jours, dossiers actifs) ---
   const myAudiencesRows = await db
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
     .where(
       and(
         gte(rappels.dateEcheance, todayIso),
-        lte(rappels.dateEcheance, in7DaysIso),
+        lte(rappels.dateEcheance, in30DaysIso),
         eq(rappels.termine, false),
         isNull(dossiers.archiveLe),
       ),
@@ -138,12 +138,12 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader
             title="Mes audiences à venir"
-            hint="7 prochains jours"
+            hint="30 prochains jours"
             count={myAudiencesRows.length}
             href={null}
           />
           {myAudiencesRows.length === 0 ? (
-            <CardEmpty>Aucune audience à venir pour vous.</CardEmpty>
+            <CardEmpty>Aucune audience prévue dans les 30 jours.</CardEmpty>
           ) : (
             <ul className="mt-3 divide-y divide-slate-100">
               {myAudiencesRows.slice(0, 5).map((a) => {
@@ -192,7 +192,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader
             title="Rappels du jour et à venir"
-            hint="7 prochains jours, tous associés"
+            hint="30 prochains jours, tous associés"
             count={rappelsRows.length}
             href={null}
           />
