@@ -11,12 +11,18 @@ import {
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth/dal";
 import {
-  formatAudienceDateParis,
-  formatEcheanceLong,
   getTodayParisIsoDate,
   parisInputToUtc,
 } from "@/lib/datetime-paris";
 import { formatMontant } from "@/lib/dossier-labels";
+import {
+  DashboardAudienceList,
+  type DashboardAudience,
+} from "@/components/dashboard-audience-list";
+import {
+  DashboardRappelList,
+  type DashboardRappel,
+} from "@/components/dashboard-rappel-list";
 
 export const dynamic = "force-dynamic";
 
@@ -151,51 +157,21 @@ export default async function DashboardPage() {
           {audiencesRows.length === 0 ? (
             <CardEmpty>Aucune audience prévue dans les 30 jours.</CardEmpty>
           ) : (
-            <ul className="mt-3 divide-y divide-slate-100">
-              {audiencesRows.slice(0, 5).map((a) => {
-                const utc =
+            <DashboardAudienceList
+              items={audiencesRows.map<DashboardAudience>((a) => ({
+                id: a.id,
+                dateHeureUtc:
                   typeof a.dateHeure === "string"
                     ? a.dateHeure
-                    : a.dateHeure.toISOString();
-                return (
-                  <li key={a.id} className="py-2">
-                    <Link
-                      href={`/dossiers/${a.dossierId}/audiences`}
-                      className="-mx-1 block rounded px-1 hover:bg-slate-50"
-                    >
-                      <p className="text-xs font-medium text-amber-700">
-                        {formatAudienceDateParis(utc)}
-                      </p>
-                      <p className="mt-0.5 text-sm text-slate-700">
-                        {a.dossierIntitule ?? (
-                          <span className="italic text-slate-400">
-                            (sans intitulé)
-                          </span>
-                        )}{" "}
-                        <span className="text-slate-500">
-                          — {a.clientNom.toUpperCase()} {a.clientPrenom}
-                        </span>
-                      </p>
-                      {a.associePrenom ? (
-                        <p className="mt-0.5 text-xs text-slate-400">
-                          Suivi par {a.associePrenom} {a.associeNom}
-                        </p>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
-              {audiencesRows.length > 5 ? (
-                <li className="pt-2">
-                  <Link
-                    href="/agenda"
-                    className="text-xs font-medium text-slate-600 hover:text-slate-900 hover:underline"
-                  >
-                    Voir tout dans l&apos;agenda →
-                  </Link>
-                </li>
-              ) : null}
-            </ul>
+                    : a.dateHeure.toISOString(),
+                dossierId: a.dossierId,
+                dossierIntitule: a.dossierIntitule,
+                clientNom: a.clientNom,
+                clientPrenom: a.clientPrenom,
+                associePrenom: a.associePrenom,
+                associeNom: a.associeNom,
+              }))}
+            />
           )}
         </Card>
 
@@ -208,50 +184,20 @@ export default async function DashboardPage() {
             href={null}
           />
           {rappelsRows.length === 0 ? (
-            <CardEmpty>Aucun rappel à traiter cette semaine.</CardEmpty>
+            <CardEmpty>Aucun rappel à traiter dans les 30 jours.</CardEmpty>
           ) : (
-            <ul className="mt-3 divide-y divide-slate-100">
-              {rappelsRows.slice(0, 5).map((r) => {
-                const isToday = r.dateEcheance === todayIso;
-                return (
-                  <li key={r.id} className="py-2">
-                    <Link
-                      href={`/dossiers/${r.dossierId}/rappels`}
-                      className="-mx-1 block rounded px-1 hover:bg-slate-50"
-                    >
-                      <p
-                        className={`text-xs font-medium ${
-                          isToday ? "text-amber-700" : "text-sky-700"
-                        }`}
-                      >
-                        {formatEcheanceLong(r.dateEcheance)}
-                        {isToday ? " · Aujourd'hui" : ""}
-                      </p>
-                      <p className="mt-0.5 text-sm text-slate-700">
-                        {r.titre}{" "}
-                        <span className="text-slate-500">
-                          —{" "}
-                          {r.dossierIntitule ?? (
-                            <span className="italic text-slate-400">
-                              (sans intitulé)
-                            </span>
-                          )}
-                        </span>
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-400">
-                        Client : {r.clientNom.toUpperCase()} {r.clientPrenom}
-                      </p>
-                    </Link>
-                  </li>
-                );
-              })}
-              {rappelsRows.length > 5 ? (
-                <li className="pt-2 text-xs text-slate-500">
-                  …et {rappelsRows.length - 5} autre
-                  {rappelsRows.length - 5 > 1 ? "s" : ""}
-                </li>
-              ) : null}
-            </ul>
+            <DashboardRappelList
+              todayIso={todayIso}
+              items={rappelsRows.map<DashboardRappel>((r) => ({
+                id: r.id,
+                titre: r.titre,
+                dateEcheance: r.dateEcheance,
+                dossierId: r.dossierId,
+                dossierIntitule: r.dossierIntitule,
+                clientNom: r.clientNom,
+                clientPrenom: r.clientPrenom,
+              }))}
+            />
           )}
         </Card>
 
